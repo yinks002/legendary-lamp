@@ -23,7 +23,8 @@ export function RegisterPatient(payload: PatientPayload):Result<Patient, string>
         BloodGroup:payload.BloodGroup,
         Allergies: payload.Allergies,
         HouseAddr: payload.HouseAddr,
-        init: true
+        init: true,
+        Doctor:ic.caller().toString()
     }
     PatientStore.insert(patient.Address, patient);
     return Result.Ok(patient)
@@ -79,19 +80,75 @@ export function getDetails(patientId: string):Result<Vec<Data>,string>{
     })
 }
 $update
-export function UpdateData(PatientId:string,payload:DataPayload):Result<Vec<Data>,string>{
+export function UpdateData(PatientId:string,payload:DataPayload):Result<Vec<Data>,string>
+{
+    const NewData: Data  = {
+        PatientId: payload.PatientId,
+        Diagnosis: payload.Diagnosis,
+        Medications: payload.Medications,
+        Date: payload.Date,
+        Note: payload.Note,
+        LabResults: payload.LabResults,
+        BillingData: payload.BillingData,
+        DoctorId: ic.caller(),
+        createdAt: ic.time()
+    }
     return match(DataStore.get(PatientId),{
-        Some:(patients)=>{
+        Some:(patient)=>{
+             patient.push(NewData)
+            DataStore.insert(PatientId, patient)
+            return Result.Ok<Vec<Data>,string>(patient)
+        },
+        None:()=>Result.Err<Vec<Data>,string>("patient id not found")
+    })
+    // return match(DataStore.get(PatientId),{
+    //     Some:(patients)=>{
             
            
-          const updatedData:Vec<Data> = {...patients,...payload}
+    //       const updatedData:Vec<Data> = {...patients,...payload}
           
-          DataStore.insert(PatientId,updatedData);
-          return Result.Ok<Vec<Data>,string>(updatedData)
-        },
-        None:()=>Result.Err<Vec<Data>,string>("nhot founhd")
-    });
+    //       DataStore.insert(PatientId,updatedData);
+    //       return Result.Ok<Vec<Data>,string>(updatedData)
+    //     },
+    //     None:()=>Result.Err<Vec<Data>,string>("nhot founhd")
+    // });
 }
+// $update
+// export function setDoctor(DoctorId: string):Result<Patient, string>{
+//     return match(PatientStore.get(ic.caller()),{
+//         Some:(patient)=>{
+//             if(patient.Address!== ic.caller()){
+//                 return Result.Err<Patient, string>("youre not tthe owner of this record")
+                
+//             }
+//             const updateDoc: Patient = {...patient, Doctor: DoctorId};
+//             PatientStore.insert(ic.caller(), updateDoc)
+//             return Result.Ok<Patient, string>(updateDoc)
+//         },
+//         None:()=>Result.Err<Patient , string>("patient with id doesnt exist")
+//     })
+// }
+// $update
+// export function RemoveAccess():Result<Patient, string>{
+//     return match(PatientStore.get(ic.caller()),{
+//         Some:(patient)=>{
+//             if(patient.Address!== ic.caller()){
+//                 return Result.Err<Patient, string>("youre not tthe owner of this record")
+                
+//             }
+//             const updateDoc: Patient = {...patient, Doctor: ic.caller().toString()};
+//             PatientStore.insert(ic.caller(), updateDoc)
+//             return Result.Ok<Patient, string>(updateDoc)
+//         },
+//         None:()=>Result.Err<Patient , string>("patient with id doesnt exist")
+//     })
+// }
+
+
+
+
+
+
 
 
 // dfx canister call elth RegisterData '(record{"PatientId"= "n42km-ezuzg-l63tz-4xg75-cf6db-kodii-mzf6c-cj5cm-7hvdd-ab25h-6ae";"Diagnosis"="canmcer";"Medications"="paracetamol";"Date"=332;"Note"="oka";"LabResults"="picture.com";"BillingData"="hmmn"})'

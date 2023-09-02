@@ -20,6 +20,7 @@ export type Patient = Record<{
     HouseAddr: string;
     init: boolean;
 
+    Doctor:string;
 }>
 
 export type Data = Record<{
@@ -54,6 +55,7 @@ export type PatientPayload = Record<{
     BloodGroup:string;
     Allergies: string;
     HouseAddr: string;
+    
     
 }>
 export type DoctorPayload = Record<{
