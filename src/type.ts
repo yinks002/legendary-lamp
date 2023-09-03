@@ -69,7 +69,6 @@ export type DoctorPayload = Record<{
 }>
 
 export type DataPayload = Record<{
-    PatientId: string,
     Diagnosis: string;
     Medications: string;
     Date: nat64;
@@ -77,8 +76,8 @@ export type DataPayload = Record<{
     LabResults: string;
     BillingData: string;
 }>
-export const PatientStore = new StableBTreeMap<Principal, Patient>(0,44,256);
-export const DoctorStore = new StableBTreeMap<Principal, Doctor>(1,24,156);
+export const PatientStore = new StableBTreeMap<string, Patient>(0,90,256);
+export const DoctorStore = new StableBTreeMap<string, Doctor>(1,90,156);
 export const DataStore = new StableBTreeMap<string, Vec<Data>>(3,256,1000);
 
 
