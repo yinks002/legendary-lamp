@@ -10,8 +10,8 @@ export function RegisterPatient(payload: PatientPayload):Result<Patient, string>
     //if address exists,  it returns an error
     const existingPatientOpt = PatientStore.get(ic.caller().toString()).Some;
     
-   if(existingPatientOpt?.Address===ic.caller()){
-        return Result.Err<Patient, string>(`Doctor with adress ${existingPatientOpt.Address}does not already exists`)
+   if(existingPatientOpt?.Address){
+        return Result.Err<Patient, string>(`patient with adress ${existingPatientOpt.Address}already exists`)
    }
     const patient: Patient = {
        Address: ic.caller(),
@@ -36,7 +36,7 @@ export function RegisterDoctor(payload:DoctorPayload):Result<Doctor, string>{
     //if address exists,  it returns an error
     const existingDoctorOpt = DoctorStore.get(ic.caller().toString()).Some;
     
-   if(existingDoctorOpt?.Address===ic.caller()){
+   if(existingDoctorOpt?.Address){
         return Result.Err<Doctor, string>(`Doctor with adress ${existingDoctorOpt.Address} already exists`)
    }
     const doctor: Doctor = {
@@ -58,9 +58,9 @@ export function RegisterData(patientId:string,payload: DataPayload):Result<Vec<D
     if(!patient?.Address){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not exist` )
     }
-    if(patient.init != false){
-        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has been initalized , please proceed to update data` )
-    }
+    // if(patient.init != false){
+    //     return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has been initalized , please proceed to update data` )
+    // }
     if(patient.Doctor != ic.caller().toString()){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to view its data` )
     }
@@ -108,9 +108,9 @@ export function UpdateData(PatientId:string,payload:DataPayload):Result<Vec<Data
     if(!patient?.Address){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not exist` )
     }
-    if(patient.init != true){
-        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has no data, please register Data` )
-    }
+    // if(patient.init != true){
+    //     return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has no data, please register Data` )
+    // }
     if(patient.Doctor != ic.caller().toString()){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to view its data` )
     }
