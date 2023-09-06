@@ -6,7 +6,7 @@ import {Patient,Doctor,PatientPayload,DataPayload,Data,DoctorPayload,PatientStor
 //to register a new patient
 $update
 export function RegisterPatient(payload: PatientPayload):Result<Patient, string>{
-     //function to check if an existing adress is mapped to doctor
+     //function to check if an existing adress is mapped to a patient
     //if address exists,  it returns an error
     const existingPatientOpt = PatientStore.get(ic.caller().toString()).Some;
     
