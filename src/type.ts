@@ -19,7 +19,7 @@ export type Patient = Record<{
     Allergies: string;
     HouseAddr: string;
     init: boolean;
-
+    ReadOrWrite: boolean;
     Doctor:string;
 }>
 

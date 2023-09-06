@@ -24,7 +24,9 @@ export function RegisterPatient(payload: PatientPayload):Result<Patient, string>
         Allergies: payload.Allergies,
         HouseAddr: payload.HouseAddr,
         init: false,
-        Doctor:ic.caller().toString()
+        Doctor:ic.caller().toString(),
+        //if set to true, the patient data can be read and altered, if set to write, doctor can only read the data
+        ReadOrWrite: false
     }
     PatientStore.insert(patient.Address.toString(), patient);
     return Result.Ok(patient)
@@ -58,11 +60,14 @@ export function RegisterData(patientId:string,payload: DataPayload):Result<Vec<D
     if(!patient?.Address){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not exist` )
     }
-    // if(patient.init != false){
-    //     return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has been initalized , please proceed to update data` )
-    // }
+    if(patient.init != false){
+        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has been initalized , please proceed to update data` )
+    }
     if(patient.Doctor != ic.caller().toString()){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to view its data` )
+    }
+    if(patient.ReadOrWrite != true){
+        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to alter its data` )
     }
     const data: Data = {
         PatientId: patientId,
@@ -79,7 +84,7 @@ export function RegisterData(patientId:string,payload: DataPayload):Result<Vec<D
     dataStore.push(data)
 
     
-    
+    patient.init = true;
     DataStore.insert(data.PatientId,dataStore);
     return Result.Ok(dataStore)
 
@@ -89,14 +94,15 @@ $query
 export function getId(): Principal{
     return ic.caller()
 }
-$update
+$query
 export function getDetails(patientId: string):Result<Vec<Data>,string>{
-    // const patient = PatientStore.get(patientId).Some
-    // if(patient.Doctor != ic.caller().toString()){
-    //     return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to view its data` )
-    // }
+    const patient = PatientStore.get(patientId).Some
+    if(patient?.Doctor != ic.caller().toString()){
+        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to view its data` )
+    } 
+    
     return match(DataStore.get(patientId),{
-        Some:(patient)=>Result.Ok<Vec<Data>, string>(patient),
+        Some:(data)=>Result.Ok<Vec<Data>, string>(data),
 
         None:() => Result.Err<Vec<Data>, string>(`a message with id=${patientId} not found`)
     })
@@ -108,11 +114,17 @@ export function UpdateData(PatientId:string,payload:DataPayload):Result<Vec<Data
     if(!patient?.Address){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not exist` )
     }
-    // if(patient.init != true){
-    //     return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has no data, please register Data` )
-    // }
+    if (PatientId == patient.Doctor){
+        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} cannot alter its own records please assign a doctor` )
+    }
+    if(patient.init != true){
+        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} has no data, please register Data` )
+    }
     if(patient.Doctor != ic.caller().toString()){
         return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to view its data` )
+    }
+    if(patient.ReadOrWrite != true){
+        return Result.Err<Vec<Data>, string>(`user with ${patient?.Address} does not authorize you to alter its data` )
     }
     const NewData: Data  = {
         PatientId: PatientId,
@@ -145,8 +157,9 @@ export function UpdateData(PatientId:string,payload:DataPayload):Result<Vec<Data
     //     None:()=>Result.Err<Vec<Data>,string>("nhot founhd")
     // });
 }
+//set true to write, set to false to readOnly
 $update
-export function GrantAccess(DoctorId: string):Result<Patient, string>{
+export function GrantAccess(DoctorId: string, ReadOrWrite: boolean):Result<Patient, string>{
     const doctor = DoctorStore.get(DoctorId).Some
         if(!doctor?.Address){
             return Result.Err(`doctor with ${doctor?.Address} does not exist` )
@@ -158,7 +171,7 @@ export function GrantAccess(DoctorId: string):Result<Patient, string>{
                 return Result.Err<Patient, string>("youre not tthe owner of this record")
                 
             }
-            const updateDoc: Patient = {...patient, Doctor: DoctorId};
+            const updateDoc: Patient = {...patient, Doctor: DoctorId, ReadOrWrite: ReadOrWrite};
             PatientStore.insert(ic.caller().toString(), updateDoc)
             return Result.Ok<Patient, string>(updateDoc)
         },
